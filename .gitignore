@@ -1,0 +1,20 @@
+# Node
+node_modules/
+dist/
+
+# Logs
+*.log
+
+# Env
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma
+**/.prisma/
+**/dev.db
+
+# Vite cache
+frontend/.vite

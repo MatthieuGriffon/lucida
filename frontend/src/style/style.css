@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/* ===== RESET MINIMAL ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, sans-serif;
+  background-color: #000; /* fond sombre de base */
+  color: #fff;            /* texte blanc de base */
+}
+
+/* ===== ACCESSIBILITÉ TACTILE ===== */
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  font-size: 1.2rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+}
+
+button {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+:focus {
+  outline: 2px solid #3b82f6; /* bleu Tailwind */
+  outline-offset: 2px;
+}
+
+/* ===== LAYOUT DE BASE ===== */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  touch-action: manipulation;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
