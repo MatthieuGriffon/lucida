@@ -2,7 +2,7 @@ import Fastify from 'fastify'
 import prismaPlugin from './plugins/prisma'
 import cookiePlugin from './plugins/cookie'
 import sessionPlugin from './plugins/session'
-import '@/types/fastify-session'
+
 
 
 const app = Fastify({ logger: true })

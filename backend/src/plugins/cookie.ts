@@ -4,8 +4,8 @@ import type { FastifyInstance } from 'fastify'
 
 export default fp(async (fastify: FastifyInstance) => {
   fastify.register(cookie, {
-    secret: 'lucida-super-secret-key', // 🔐 à remplacer par une vraie clé secrète (env)
+    secret: process.env.SESSION_SECRET!, 
     hook: 'onRequest',
-    parseOptions: {}, // tu peux préciser `httpOnly`, `secure`, etc.
+    parseOptions: {}, 
   })
 })
