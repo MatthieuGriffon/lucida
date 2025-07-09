@@ -12,6 +12,7 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String
+  name      String 
   role      Role     @default(USER)
   books     Book[]   @relation("UserBooks")
   createdAt DateTime @default(now())
