@@ -9,6 +9,7 @@ import './scripts/initAdmin'
 import { authRoutes } from '@/routes/auth'
 import { accountRoutes } from '@/routes/accounts'
 import { adminUsersRoutes } from '@/routes/adminUsers'
+import bookRequestRoutes from '@/routes/book-request'
 
 const app = Fastify({ logger: true })
 
@@ -23,12 +24,10 @@ const start = async () => {
     app.register(cookiePlugin)
     app.register(sessionPlugin)
     app.register(authRoutes, { prefix: '/api' })
-    app.log.info('🔗 authRoutes branché avec /api')
     app.register(accountRoutes, { prefix: '/api' })
-    app.log.info('🔗 accountRoutes branché avec /api')
     app.register(adminUsersRoutes, { prefix: '/api' })
-    app.log.info('🔗 adminUsersRoutes branché avec /api')
-    
+    app.register(bookRequestRoutes, { prefix: '/api' })
+
     app.get('/', async () => {
       return { message: 'Bienvenue sur Lucida 💫' }
     })
