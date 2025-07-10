@@ -1,4 +1,3 @@
-import type { FastifyReply } from 'fastify'
 import bcrypt from 'bcrypt'
 import type { LoginInput } from '@/schema/auth'
 import type { PrismaClient } from '@prisma/client'
@@ -7,21 +6,18 @@ import type { FastifyInstance } from 'fastify'
 
 export async function loginService(
   prisma: PrismaClient,
-  reply: FastifyReply,
-  { email, password }: LoginInput
+  data: LoginInput
 ) {
-  const user = await prisma.user.findUnique({ where: { email } })
+  const user = await prisma.user.findUnique({
+    where: { email: data.email },
+  })
 
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    return reply.status(401).send({ error: 'Email ou mot de passe incorrect' })
-  }
+  if (!user) return null
 
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-  }
+  const passwordMatch = await bcrypt.compare(data.password, user.password)
+  if (!passwordMatch) return null
+
+  return user
 }
 
 export async function getCurrentUserService(

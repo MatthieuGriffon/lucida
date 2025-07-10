@@ -1,16 +1,28 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const email = ref('')
 const password = ref('')
-const error = ref('')
 
-function handleLogin() {
-  error.value = ''
-  console.log('Tentative de login avec :', email.value, password.value)
+const userStore = useUserStore()
+const router = useRouter()
 
-  // Pour test visuel :
-  // error.value = 'Identifiants incorrects'
+async function handleLogin() {
+  const success = await userStore.login(email.value, password.value)
+
+  if (!success) return
+
+  await userStore.fetchUser()
+
+  if (!userStore.isAuthenticated) return
+
+  if (userStore.role === 'ADMIN') {
+    router.push('/admin')
+  } else {
+    router.push('/dashboard')
+  }
 }
 </script>
 
@@ -48,13 +60,14 @@ function handleLogin() {
 
       <button
         type="submit"
-        class="w-full bg-blue-600 text-white text-xl font-semibold py-4 rounded-2xl active:bg-blue-700 hover:bg-blue-700 transition duration-150"
+        :disabled="userStore.loading"
+        class="w-full bg-blue-600 text-white text-xl font-semibold py-4 rounded-2xl transition duration-150 disabled:opacity-50"
       >
         Se connecter
       </button>
 
-      <p v-if="error" class="text-lg text-red-400 text-center">
-        {{ error }}
+      <p v-if="userStore.error" class="text-lg text-red-400 text-center">
+        {{ userStore.error }}
       </p>
     </form>
   </div>

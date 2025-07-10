@@ -6,6 +6,8 @@ import { isAuthenticated } from '@/middlewares/auth'
 
 
 export async function authRoutes(app: FastifyInstance) {
+   app.log.info('✅ Routes /auth enregistrées')
+
   app.post('/auth/login', {
     schema: loginSchema,
     handler: loginController,
