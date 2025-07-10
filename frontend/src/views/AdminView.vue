@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import ActionCard from '@/components/admin/ActionCard.vue'
 import AdminUserCard from '@/components/admin/AdminUserCard.vue'
+import BookRequestAdminCard from '@/components/admin/BookRequestAdminCard.vue'
+
 </script>
 
 <template>
@@ -11,6 +13,9 @@ import AdminUserCard from '@/components/admin/AdminUserCard.vue'
       </div>
       <div class="flex-1 min-w-[280px] max-w-[400px]">
         <AdminUserCard />
+      </div>
+      <div class="flex-1 min-w-[280px] max-w-[400px]">
+        <BookRequestAdminCard />
       </div>
     </div>
   </div>

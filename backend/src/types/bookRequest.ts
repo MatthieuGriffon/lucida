@@ -6,3 +6,11 @@ export const CreateBookRequestInput = Type.Object({
 })
 
 export type CreateBookRequestInputType = Static<typeof CreateBookRequestInput>
+
+// ✅ Schéma pour marquer une demande comme satisfaite
+export const FulfillBookRequestInput = Type.Object({
+  fulfilledTitle: Type.String({ minLength: 1 }),
+  fulfilledAuthor: Type.Optional(Type.String()),
+})
+
+export type FulfillBookRequestInputType = Static<typeof FulfillBookRequestInput>
