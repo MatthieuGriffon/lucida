@@ -14,7 +14,10 @@ export const useUserStore = defineStore('user', () => {
 
   const router = useRouter()
 
- async function login(email: string, password: string): Promise<boolean> {
+async function login(email: string, password: string): Promise<boolean> {
+  loading.value = true
+  error.value = null
+
   try {
     const response = await fetch('/api/auth/login', {
       method: 'POST',
@@ -24,16 +27,17 @@ export const useUserStore = defineStore('user', () => {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      console.error('🔐 Erreur login:', error)
+      const data = await response.json()
+      error.value = data.message || 'Échec de la connexion'
       return false
     }
 
-    console.log('🔐 Réponse login:', await response.json())
     return true
-  } catch (err) {
-    console.error('❌ Exception login:', err)
+  } catch (err: any) {
+    error.value = err?.message || 'Erreur réseau'
     return false
+  } finally {
+    loading.value = false
   }
 }
 
@@ -59,6 +63,10 @@ export const useUserStore = defineStore('user', () => {
     router.push('/')
   }
 
+  async function clearError() {
+  error.value = null
+}
+
   return {
     user,
     role,
@@ -68,5 +76,6 @@ export const useUserStore = defineStore('user', () => {
     login,
     fetchUser,
     logout,
+    clearError,
   }
 })

@@ -14,7 +14,7 @@ export async function loginController(
 
   if (!user) {
     console.log('❌ Utilisateur non trouvé ou mot de passe incorrect')
-    return reply.status(401).send({ error: 'Email ou mot de passe incorrect' })
+return reply.status(401).send({ message: 'Email ou mot de passe incorrect' })
   }
 
   request.session.user = {

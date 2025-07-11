@@ -7,6 +7,9 @@ import {
   deleteUser,
 } from '@/api/adminUsers'
 import { Trash2, KeyRound, ChevronDown, ChevronRight } from 'lucide-vue-next'
+import BaseConfirmModal from '@/components/ui/BaseConfirmModal.vue'
+import BasePromptModal from '@/components/ui/BasePromptModal.vue'
+import { useToast } from '@/composables/useToast'
 
 type User = {
   id: string
@@ -18,8 +21,7 @@ type User = {
 
 const users = ref<User[]>([])
 const loading = ref(false)
-const error = ref('')
-const success = ref('')
+const toast = useToast()
 
 const showUserList = ref(false)
 const showAddUser = ref(false)
@@ -31,12 +33,19 @@ const newUser = ref({
   role: 'USER' as 'USER' | 'ADMIN',
 })
 
+// modales
+const confirmOpen = ref(false)
+const promptOpen = ref(false)
+const userToDelete = ref<User | null>(null)
+const userToUpdate = ref<User | null>(null)
+const newPassword = ref('')
+
 async function loadUsers() {
   try {
     loading.value = true
     users.value = await fetchUsers()
   } catch (err: any) {
-    error.value = err.message
+    toast.error(err.message || 'Erreur chargement utilisateurs')
   } finally {
     loading.value = false
   }
@@ -45,36 +54,50 @@ async function loadUsers() {
 async function handleCreateUser() {
   try {
     await createUser(newUser.value)
-    success.value = 'Utilisateur ajouté ✅'
-    error.value = ''
+    toast.success('Utilisateur ajouté ✅')
     Object.assign(newUser.value, { name: '', email: '', password: '', role: 'USER' })
     await loadUsers()
   } catch (err: any) {
-    error.value = err.message
-    success.value = ''
+    toast.error(err.message || 'Erreur lors de l’ajout')
   }
 }
 
-async function handleDeleteUser(id: string) {
-  if (!confirm('❌ Supprimer cet utilisateur ?')) return
+function confirmDelete(user: User) {
+  userToDelete.value = user
+  confirmOpen.value = true
+}
+
+async function handleDeleteConfirmed() {
+  if (!userToDelete.value) return
   try {
-    await deleteUser(id)
+    await deleteUser(userToDelete.value.id)
+    toast.success('Utilisateur supprimé 🗑')
     await loadUsers()
   } catch (err: any) {
-    error.value = err.message
+    toast.error(err.message || 'Erreur suppression')
+  } finally {
+    userToDelete.value = null
+    confirmOpen.value = false
   }
 }
 
-async function handleChangePassword(id: string) {
-  const password = prompt('Nouveau mot de passe :')
-  if (!password) return
+function promptChangePassword(user: User) {
+  userToUpdate.value = user
+  newPassword.value = ''
+  promptOpen.value = true
+}
+
+async function handlePasswordChangeConfirmed() {
+  if (!userToUpdate.value || !newPassword.value.trim()) return
   try {
-    await changeUserPassword(id, password)
-    success.value = 'Mot de passe modifié ✅'
-    error.value = ''
+    await changeUserPassword(userToUpdate.value.id, newPassword.value.trim())
+    toast.success('Mot de passe modifié 🔑')
   } catch (err: any) {
-    error.value = err.message
-    success.value = ''
+    toast.error(err.message || 'Erreur modification mot de passe')
+  } finally {
+    userToUpdate.value = null
+    newPassword.value = ''
+    promptOpen.value = false
   }
 }
 
@@ -84,9 +107,6 @@ onMounted(loadUsers)
 <template>
   <div class="bg-white text-gray-900 p-6 rounded-xl shadow-lg space-y-6 max-w-2xl w-full">
     <h2 class="text-xl font-semibold">Gestion des utilisateurs</h2>
-
-    <div v-if="error" class="text-red-600 font-medium">{{ error }}</div>
-    <div v-if="success" class="text-green-600 font-medium">{{ success }}</div>
 
     <!-- Liste des utilisateurs -->
     <div>
@@ -113,14 +133,14 @@ onMounted(loadUsers)
           </div>
           <div class="flex gap-1">
             <button
-              @click="handleChangePassword(user.id)"
+              @click="promptChangePassword(user)"
               class="bg-blue-600 text-white p-1.5 rounded hover:bg-blue-700"
               title="Changer le mot de passe"
             >
               <KeyRound class="w-3 h-3" />
             </button>
             <button
-              @click="handleDeleteUser(user.id)"
+              @click="confirmDelete(user)"
               class="bg-red-600 text-white p-1.5 rounded hover:bg-red-700"
               title="Supprimer l’utilisateur"
             >
@@ -159,4 +179,26 @@ onMounted(loadUsers)
       </form>
     </div>
   </div>
+
+  <!-- Modale confirmation suppression -->
+  <BaseConfirmModal
+    v-if="confirmOpen"
+    title="Supprimer cet utilisateur ?"
+    message="Cette action est irréversible."
+    confirm-label="Supprimer"
+    cancel-label="Annuler"
+    @confirm="handleDeleteConfirmed"
+    @cancel="confirmOpen = false"
+  />
+
+  <!-- Modale changement mot de passe -->
+  <BasePromptModal
+    v-if="promptOpen"
+    title="Nouveau mot de passe"
+    placeholder="Mot de passe"
+    :value="newPassword"
+    @update:value="newPassword = $event"
+    @confirm="handlePasswordChangeConfirmed"
+    @cancel="promptOpen = false"
+  />
 </template>

@@ -3,10 +3,16 @@ import { ref, onMounted } from 'vue'
 import { getBookRequests, fulfillRequest, rejectRequest } from '@/api/adminBookRequests'
 import { deleteBookRequest } from '@/api/bookRequest'
 import type { BookRequestWithUser } from '@/types/bookRequest'
+import { useToast } from '@/composables/useToast'
+import BaseConfirmModal from '@/components/ui/BaseConfirmModal.vue'
 
 const requests = ref<BookRequestWithUser[]>([])
 const loading = ref(false)
 const error = ref('')
+const confirmOpen = ref(false)
+const requestToDelete = ref<BookRequestWithUser | null>(null)
+
+const toast = useToast()
 
 async function fetchRequests() {
   try {
@@ -20,27 +26,42 @@ async function fetchRequests() {
 }
 
 async function markAsFulfilled(id: string, title: string, author?: string) {
-  await fulfillRequest(id, {
-    fulfilledTitle: title,
-    fulfilledAuthor: author,
-  })
-  await fetchRequests()
+  try {
+    await fulfillRequest(id, { fulfilledTitle: title, fulfilledAuthor: author })
+    toast.success('📚 Marquée comme ajoutée')
+    await fetchRequests()
+  } catch (err: any) {
+    toast.error(err.message || 'Erreur lors de la mise à jour')
+  }
 }
 
 async function markAsRejected(id: string) {
-  await rejectRequest(id)
-  await fetchRequests()
-}
-async function handleDelete(id: string) {
-  const confirmed = confirm('Supprimer cette demande ?')
-  if (!confirmed) return
-
   try {
-    await deleteBookRequest(id)
+    await rejectRequest(id)
+    toast.success('🚫 Demande rejetée')
+    await fetchRequests()
+  } catch (err: any) {
+    toast.error(err.message || 'Erreur lors du rejet')
+  }
+}
+
+function confirmDelete(request: BookRequestWithUser) {
+  requestToDelete.value = request
+  confirmOpen.value = true
+}
+
+async function handleDelete() {
+  if (!requestToDelete.value) return
+  try {
+    await deleteBookRequest(requestToDelete.value.id)
+    toast.success('🗑 Demande supprimée')
     await fetchRequests()
   } catch (err) {
-    alert('Erreur lors de la suppression.')
+    toast.error('Erreur lors de la suppression')
     console.error(err)
+  } finally {
+    confirmOpen.value = false
+    requestToDelete.value = null
   }
 }
 
@@ -81,7 +102,7 @@ onMounted(fetchRequests)
           Rejeter
         </button>
         <button
-          @click="() => handleDelete(request.id)"
+          @click="() => confirmDelete(request)"
           class="text-sm text-red-600 hover:underline"
         >
           🗑 Supprimer
@@ -95,7 +116,7 @@ onMounted(fetchRequests)
           <span v-if="request.fulfilledBookAuthor"> — {{ request.fulfilledBookAuthor }}</span>
         </div>
         <button
-          @click="() => handleDelete(request.id)"
+          @click="() => confirmDelete(request)"
           class="text-sm text-red-600 hover:underline"
         >
           Supprimer
@@ -105,12 +126,22 @@ onMounted(fetchRequests)
       <div v-else-if="request.status === 'REJECTED'" class="flex justify-between items-center text-red-500 text-sm">
         <div>❌ Demande refusée</div>
         <button
-          @click="() => handleDelete(request.id)"
+          @click="() => confirmDelete(request)"
           class="text-sm text-red-600 hover:underline"
         >
           Supprimer
         </button>
       </div>
     </div>
+
+    <BaseConfirmModal
+      v-if="confirmOpen"
+      title="Supprimer cette demande ?"
+      message="Cette action est irréversible."
+      confirm-label="Supprimer"
+      cancel-label="Annuler"
+      @confirm="handleDelete"
+      @cancel="confirmOpen = false"
+    />
   </div>
 </template>

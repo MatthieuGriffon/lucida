@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useToast } from '@/composables/useToast'
 
 const email = ref('')
 const password = ref('')
@@ -9,10 +10,17 @@ const password = ref('')
 const userStore = useUserStore()
 const router = useRouter()
 
+const toast = useToast()
+
 async function handleLogin() {
   const success = await userStore.login(email.value, password.value)
 
-  if (!success) return
+  if (!success) {
+    if (userStore.error) {
+      toast.error(userStore.error)
+    }
+    return
+  }
 
   await userStore.fetchUser()
 

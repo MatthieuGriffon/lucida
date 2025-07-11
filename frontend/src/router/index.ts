@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import LoginView from '@/views/LoginView.vue'
 import AdminView from '@/views/AdminView.vue'
 import UserView from '@/views/UserView.vue'
+import AdminBooksView from '@/views/AdminBooksView.vue'
 import { useUserStore } from '@/stores/user'
 
 const routes = [
@@ -13,6 +14,7 @@ const routes = [
       { path: '', name: 'login', component: LoginView },
       { path: 'admin', name: 'admin', component: AdminView },
       { path: 'dashboard', name: 'dashboard', component: UserView },
+      { path: 'admin/books', name: 'admin-books', component: AdminBooksView },
     ]
   }
 ]
@@ -42,6 +44,8 @@ router.beforeEach(async (to) => {
   if (to.name === 'dashboard' && user?.role !== 'USER') {
     return { name: 'login' }
   }
-
+  if (['admin', 'admin-books'].includes(to.name as string) && user?.role !== 'ADMIN') {
+  return { name: 'login' }
+}
   return true
 })
