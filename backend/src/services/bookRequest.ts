@@ -21,3 +21,24 @@ export async function getUserBookRequests(fastify: FastifyInstance, userId: stri
     orderBy: { createdAt: 'desc' },
   })
 }
+
+export async function deleteBookRequest(
+  fastify: FastifyInstance,
+  id: string,
+  userId: string,
+  isAdmin: boolean
+) {
+  const existing = await fastify.prisma.bookRequest.findUnique({
+    where: { id },
+  })
+
+  if (!existing) return null
+
+  if (existing.userId !== userId && !isAdmin) return false
+
+  await fastify.prisma.bookRequest.delete({
+    where: { id },
+  })
+
+  return true
+}

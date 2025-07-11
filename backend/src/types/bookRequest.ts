@@ -14,3 +14,7 @@ export const FulfillBookRequestInput = Type.Object({
 })
 
 export type FulfillBookRequestInputType = Static<typeof FulfillBookRequestInput>
+
+export const DeleteBookRequestParams = Type.Object({
+  id: Type.String({ format: 'uuid' }),
+})

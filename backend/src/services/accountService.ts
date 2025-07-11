@@ -47,7 +47,15 @@ export async function deleteUserAccount(
     return { success: false, message: 'Mot de passe incorrect' }
   }
 
-  await fastify.prisma.user.delete({ where: { id: userId } })
+  // Supprimer d'abord les BookRequest liés à cet utilisateur
+  await fastify.prisma.bookRequest.deleteMany({
+    where: { userId }
+  })
+
+  // Puis supprimer l'utilisateur
+  await fastify.prisma.user.delete({
+    where: { id: userId }
+  })
 
   return { success: true }
 }

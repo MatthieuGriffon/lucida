@@ -45,6 +45,29 @@ export async function updateUserPassword(fastify: FastifyInstance, { userId, pas
 }
 
 export async function deleteUser(fastify: FastifyInstance, userId: string) {
-  await fastify.prisma.user.delete({ where: { id: userId } })
+  // On vérifie le rôle de l'utilisateur avant suppression
+  const user = await fastify.prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  })
+
+  if (!user) {
+    return { success: false, message: 'Utilisateur introuvable' }
+  }
+
+  if (user.role === 'ADMIN') {
+    return { success: false, message: 'Impossible de supprimer un compte administrateur' }
+  }
+
+  // Supprimer les demandes de livres liées
+  await fastify.prisma.bookRequest.deleteMany({
+    where: { userId }
+  })
+
+  // Supprimer le compte utilisateur
+  await fastify.prisma.user.delete({
+    where: { id: userId }
+  })
+
   return { success: true }
 }

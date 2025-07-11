@@ -10,7 +10,7 @@ import { authRoutes } from '@/routes/auth'
 import { accountRoutes } from '@/routes/accounts'
 import { adminUsersRoutes } from '@/routes/adminUsers'
 import bookRequestRoutes from '@/routes/book-request'
-import { adminBookRequestRoutes } from '@/routes/adminBookRequest' // ✅ à ajouter
+import { adminBookRequestRoutes } from '@/routes/adminBookRequest' 
 
 const app = Fastify({ logger: true })
 
@@ -29,7 +29,6 @@ const start = async () => {
     app.register(adminUsersRoutes, { prefix: '/api' })
     app.register(bookRequestRoutes, { prefix: '/api' })
     app.register(adminBookRequestRoutes, { prefix: '/api' })
-
     app.get('/', async () => {
       return { message: 'Bienvenue sur Lucida 💫' }
     })
@@ -37,7 +36,7 @@ const start = async () => {
     app.get('/ping', async () => {
       return { pong: true }
     })
-
+    app.printRoutes()
     await app.listen({ port: 3000 })
     app.log.info(`🚀 Server listening`)
   } catch (err) {

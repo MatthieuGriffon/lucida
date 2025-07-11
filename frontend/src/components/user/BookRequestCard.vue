@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { submitBookRequest, getUserBookRequests, type BookRequest } from '@/api/bookRequest'
+import { submitBookRequest, getUserBookRequests, deleteBookRequest, type BookRequest } from '@/api/bookRequest'
 
 const title = ref('')
 const author = ref('')
@@ -41,7 +41,18 @@ async function handleSubmit() {
     errorMessage.value = result.message || 'Erreur lors de l’envoi.'
   }
 }
+async function handleDelete(id: string) {
+  const confirmed = confirm('Supprimer cette demande ?')
+  if (!confirmed) return
 
+  try {
+    await deleteBookRequest(id)
+    requests.value = requests.value.filter(r => r.id !== id)
+  } catch (error) {
+    alert('Erreur lors de la suppression.')
+    console.error(error)
+  }
+}
 onMounted(fetchRequests)
 </script>
 
@@ -82,19 +93,21 @@ onMounted(fetchRequests)
   style="scrollbar-width: thin; scrollbar-color: #4b5563 transparent;"
 >
   <li
-    v-for="r in requests"
-    :key="r.id"
-    class="bg-gray-800 rounded-lg p-3 flex justify-between items-start shadow-sm"
-  >
-    <div class="flex-1">
-      <div class="text-white font-semibold">
-        {{ r.title }}
-        <span v-if="r.author" class="text-gray-400 font-normal"> — {{ r.author }}</span>
-      </div>
-      <div class="text-xs mt-1 text-gray-400">
-        {{ new Date(r.createdAt).toLocaleDateString('fr-FR', { dateStyle: 'short' }) }}
-      </div>
+  v-for="r in requests"
+  :key="r.id"
+  class="bg-gray-800 rounded-lg p-3 flex justify-between items-start shadow-sm"
+>
+  <div class="flex-1">
+    <div class="text-white font-semibold">
+      {{ r.title }}
+      <span v-if="r.author" class="text-gray-400 font-normal"> — {{ r.author }}</span>
     </div>
+    <div class="text-xs mt-1 text-gray-400">
+      {{ new Date(r.createdAt).toLocaleDateString('fr-FR', { dateStyle: 'short' }) }}
+    </div>
+  </div>
+
+  <div class="flex flex-col items-end gap-1">
     <div
       class="text-xs px-2 py-1 rounded-full font-medium"
       :class="{
@@ -111,7 +124,15 @@ onMounted(fetchRequests)
           : 'en attente'
       }}
     </div>
-  </li>
+
+    <button
+      @click="handleDelete(r.id)"
+      class="text-red-400 text-xs hover:underline mt-1"
+    >
+      🗑 Supprimer
+    </button>
+  </div>
+</li>
 </ul>
     </div>
 

@@ -3,19 +3,21 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { logout as logoutAPI, changePassword, deleteAccount } from '@/api/account'
+import { useToast } from '@/composables/useToast'
+import BaseConfirmModal from '@/components/ui/BaseConfirmModal.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+const toast = useToast()
 
 const showChangePassword = ref(false)
 const showDeleteAccount = ref(false)
+const confirmDeleteOpen = ref(false)
 
 const oldPassword = ref('')
 const newPassword = ref('')
 const passwordToDelete = ref('')
 
-const message = ref('')
-const error = ref('')
 const loading = ref(false)
 
 const doLogout = async () => {
@@ -24,45 +26,39 @@ const doLogout = async () => {
     await logoutAPI()
     await userStore.logout()
     router.push('/')
+    toast.success('Déconnexion réussie')
   } catch {
-    error.value = 'Erreur lors de la déconnexion.'
+    toast.error('Erreur lors de la déconnexion.')
   } finally {
     loading.value = false
   }
 }
 
 const submitChangePassword = async () => {
-  error.value = ''
-  message.value = ''
   loading.value = true
-
   try {
     await changePassword(oldPassword.value, newPassword.value)
-    message.value = '🔒 Mot de passe modifié'
+    toast.success('🔒 Mot de passe modifié')
     oldPassword.value = ''
     newPassword.value = ''
     showChangePassword.value = false
   } catch (err: any) {
-    error.value = err.message || 'Erreur inconnue'
+    toast.error(err.message || 'Erreur inconnue')
   } finally {
     loading.value = false
   }
 }
 
 const submitDeleteAccount = async () => {
-  const confirmed = confirm('❌ Supprimer ton compte ? Cette action est irréversible.')
-  if (!confirmed) return
-
-  error.value = ''
-  message.value = ''
+  confirmDeleteOpen.value = false
   loading.value = true
-
   try {
     await deleteAccount(passwordToDelete.value)
     await userStore.logout()
     router.push('/')
+    toast.success('Compte supprimé avec succès')
   } catch (err: any) {
-    error.value = err.message || 'Échec de suppression'
+    toast.error(err.message || 'Échec de la suppression')
   } finally {
     loading.value = false
   }
@@ -74,11 +70,13 @@ const submitDeleteAccount = async () => {
     <h2 class="text-xl font-semibold">Mon compte</h2>
 
     <div class="space-y-2">
+      <!-- Déconnexion -->
       <button @click="doLogout" :disabled="loading"
               class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded">
         Se déconnecter
       </button>
 
+      <!-- Changement mot de passe -->
       <button @click="showChangePassword = !showChangePassword" :disabled="loading"
               class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
         {{ showChangePassword ? 'Annuler' : 'Changer mon mot de passe' }}
@@ -103,9 +101,13 @@ const submitDeleteAccount = async () => {
         </button>
       </div>
 
-      <button @click="showDeleteAccount = !showDeleteAccount" :disabled="loading"
-              class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded">
-        {{ showDeleteAccount ? 'Annuler' : 'Supprimer mon compte' }}
+      <!-- Suppression compte -->
+      <button
+        @click="showDeleteAccount ? confirmDeleteOpen = true : showDeleteAccount = true"
+        :disabled="loading"
+        class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded"
+      >
+        {{ showDeleteAccount ? 'Confirmer la suppression' : 'Supprimer mon compte' }}
       </button>
 
       <div v-if="showDeleteAccount" class="space-y-2">
@@ -115,14 +117,18 @@ const submitDeleteAccount = async () => {
           placeholder="Mot de passe"
           class="w-full p-2 rounded bg-gray-800 text-white placeholder-gray-400"
         />
-        <button @click="submitDeleteAccount" :disabled="loading"
-                class="w-full bg-gray-700 hover:bg-gray-800 text-white py-2 rounded">
-          Supprimer
-        </button>
       </div>
     </div>
-
-    <div v-if="message" class="text-green-400 text-sm font-medium">{{ message }}</div>
-    <div v-if="error" class="text-red-400 text-sm font-medium">{{ error }}</div>
   </div>
+
+  <!-- Modale de confirmation -->
+  <BaseConfirmModal
+    v-if="confirmDeleteOpen"
+    title="Supprimer ton compte ?"
+    message="Cette action est irréversible. Es-tu sûr(e) de vouloir continuer ?"
+    confirm-label="Supprimer"
+    cancel-label="Annuler"
+    @confirm="submitDeleteAccount"
+    @cancel="confirmDeleteOpen = false"
+  />
 </template>

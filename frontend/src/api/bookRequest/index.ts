@@ -57,3 +57,15 @@ export async function getUserBookRequests(): Promise<BookRequest[]> {
     return []
   }
 }
+
+// DELETE : supprimer une demande
+export async function deleteBookRequest(id: string): Promise<void> {
+  const res = await fetch(`/api/book-request/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    throw new Error('Erreur HTTP ' + res.status)
+  }
+}
