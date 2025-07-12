@@ -40,3 +40,31 @@ export async function createBook(data: { title: string; author?: string; epubPat
 
   return await response.json()
 } 
+
+export async function getAllBooks(): Promise<
+  { id: string; title: string; author?: string; epubPath: string; createdAt: string }[]
+> {
+  const response = await fetch('/api/admin/books', {
+    method: 'GET',
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null)
+    throw new Error(error?.message || 'Erreur lors du chargement des livres')
+  }
+
+  return await response.json()
+}
+
+export async function deleteBook(id: string): Promise<void> {
+  const response = await fetch(`/api/admin/book/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null)
+    throw new Error(error?.message || 'Erreur lors de la suppression du livre')
+  }
+}

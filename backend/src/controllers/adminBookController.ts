@@ -68,7 +68,7 @@ export async function uploadBookFileController(req: FastifyRequest, reply: Fasti
 
       uploadFileName = part.filename
       const slug = slugify(`${Date.now()}-${uploadFileName}`)
-      const uploadDir = path.join(process.cwd(), 'uploads', 'epub', slug)
+      const uploadDir = path.join(process.cwd(), '..', 'uploads', 'epub', slug)
       await fs.mkdir(uploadDir, { recursive: true })
 
       const fullPath = path.join(uploadDir, 'livre.epub')

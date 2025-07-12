@@ -2,6 +2,8 @@
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
 import { uploadBookFile, createBook } from '@/api/adminBooks'
+import { getAllBooks, deleteBook } from '@/api/adminBooks'
+import { onMounted } from 'vue'
 
 const router = useRouter()
 
@@ -69,6 +71,29 @@ async function handleAddBook() {
     uploading.value = false
   }
 }
+type Book = {
+  id: string
+  title: string
+  author?: string
+  epubPath: string
+  createdAt: string
+}
+
+const books = ref<Book[]>([])
+const loadingBooks = ref(false)
+
+async function fetchBooks() {
+  loadingBooks.value = true
+  books.value = await getAllBooks()
+  loadingBooks.value = false
+}
+
+async function handleDelete(id: string) {
+  await deleteBook(id)
+  await fetchBooks()
+}
+
+onMounted(fetchBooks)
 </script>
 
 <template>
@@ -115,8 +140,7 @@ async function handleAddBook() {
     class="text-white"
   />
 </div>
-
-        <div v-if="uploadError" class="text-red-400 text-sm">{{ uploadError }}</div>
+<div v-if="uploadError" class="text-red-400 text-sm">{{ uploadError }}</div>
 
         <button
           type="submit"
@@ -125,6 +149,34 @@ async function handleAddBook() {
         >
           {{ uploading ? 'Envoi en cours…' : 'Ajouter le livre' }}
         </button>
+<!-- Liste des livres déjà ajoutés -->
+<div class="bg-gray-800 text-white p-6 rounded-xl shadow space-y-6">
+  <h2 class="text-2xl font-semibold">Livres enregistrés</h2>
+
+  <div v-if="loadingBooks" class="text-gray-400">Chargement…</div>
+  <div v-else-if="books.length === 0" class="text-gray-400">Aucun livre pour le moment.</div>
+
+  <ul v-else class="space-y-2">
+    <li
+      v-for="book in books"
+      :key="book.id"
+      class="bg-gray-900 p-4 rounded-xl flex justify-between items-center"
+    >
+      <div>
+        <div class="text-lg font-bold">{{ book.title }}</div>
+        <div class="text-sm text-gray-400">{{ book.author || 'inconnu' }}</div>
+      </div>
+      <button
+        @click="handleDelete(book.id)"
+        class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
+      >
+        Supprimer
+      </button>
+    </li>
+  </ul>
+</div>
+
+        
       </form>
     </div>
 
