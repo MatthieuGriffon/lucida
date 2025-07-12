@@ -1,4 +1,3 @@
-console.log('✅ [book-request] routes enregistrées')
 import type { FastifyInstance } from 'fastify'
 import { postBookRequest,getBookRequests,deleteBookRequestHandler } from '@/controllers/bookRequestController'
 import { CreateBookRequestInput,DeleteBookRequestParams } from '@/types/bookRequest'

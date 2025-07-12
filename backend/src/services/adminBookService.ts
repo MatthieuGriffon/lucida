@@ -14,12 +14,15 @@ export async function createBook(
   data: { title: string; author?: string; epubPath: string },
   userId: string
 ) {
+  const folderName = data.epubPath.split('/').slice(-2, -1)[0]
+
   return fastify.prisma.book.create({
     data: {
       title: data.title,
       author: data.author ?? '',
       epubPath: data.epubPath,
       addedById: userId,
+      folderName, // ✅ obligatoire depuis ta dernière migration
     },
   })
 }
@@ -37,6 +40,12 @@ export async function updateBook(
 
 export async function deleteBook(fastify: FastifyInstance, id: string) {
   return fastify.prisma.book.delete({
+    where: { id },
+  })
+}
+
+export async function getBookById(app: FastifyInstance, id: string) {
+  return await app.prisma.book.findUnique({
     where: { id },
   })
 }

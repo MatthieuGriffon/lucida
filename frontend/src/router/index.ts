@@ -4,7 +4,9 @@ import LoginView from '@/views/LoginView.vue'
 import AdminView from '@/views/AdminView.vue'
 import UserView from '@/views/UserView.vue'
 import AdminBooksView from '@/views/AdminBooksView.vue'
+import UserBooksView from '@/views/UserBooksView.vue'
 import { useUserStore } from '@/stores/user'
+import BookReaderView from '@/views/BookReaderView.vue'
 
 const routes = [
   {
@@ -15,6 +17,8 @@ const routes = [
       { path: 'admin', name: 'admin', component: AdminView },
       { path: 'dashboard', name: 'dashboard', component: UserView },
       { path: 'admin/books', name: 'admin-books', component: AdminBooksView },
+      { path: '/user/books', name: 'user-books', component: UserBooksView },
+      { path: 'user/read/:id', name: 'user-read', component: BookReaderView }
     ]
   }
 ]
@@ -45,6 +49,9 @@ router.beforeEach(async (to) => {
     return { name: 'login' }
   }
   if (['admin', 'admin-books'].includes(to.name as string) && user?.role !== 'ADMIN') {
+  return { name: 'login' }
+}
+if (to.name === 'user-read' && user?.role !== 'USER') {
   return { name: 'login' }
 }
   return true

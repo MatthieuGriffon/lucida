@@ -13,5 +13,13 @@ import UserAccountCard from '@/components/user/UserAccountCard.vue'
         <UserAccountCard />
       </div>
     </div>
+    <div class="mt-8 text-center">
+  <RouterLink
+    to="/user/books"
+    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold"
+  >
+    📚 Accéder à la bibliothèque
+  </RouterLink>
+</div>
   </div>
 </template>

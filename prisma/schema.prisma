@@ -29,6 +29,8 @@ model Book {
   createdAt DateTime @default(now())
   addedBy    User     @relation("Book_addedBy", fields: [addedById], references: [id])
   addedById  String
+  folderName  String   // ← ajoute cette ligne
+
 }
 
 enum Role {
