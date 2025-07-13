@@ -26,7 +26,7 @@ app.get(
   async (req, reply) => {
     const { id } = req.params as { id: string }
 
-    const book = await getBookById(app, id)
+    const book = await getBookById(app, req, id)
     if (!book) {
       return reply.status(404).send({ message: 'Livre introuvable' })
     }

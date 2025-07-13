@@ -8,52 +8,70 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  password     String
-  name         String
-  role         Role          @default(USER)
-  books        Book[]        @relation("UserBooks")
-  createdAt    DateTime      @default(now())
-  bookRequests BookRequest[]
-  booksAdded   Book[]        @relation("Book_addedBy")
-}
-
-model Book {
-  id        String   @id @default(uuid())
-  title     String
-  author    String
-  epubPath  String
-  users     User[]   @relation("UserBooks")
-  createdAt DateTime @default(now())
-  addedBy    User     @relation("Book_addedBy", fields: [addedById], references: [id])
-  addedById  String
-  folderName  String   // ← ajoute cette ligne
-
-}
-
 enum Role {
   USER
   ADMIN
 }
 
-model BookRequest {
-  id                  String        @id @default(uuid())
-  title               String
-  author              String?
-  user                User          @relation(fields: [userId], references: [id])
-  userId              String
-  status              RequestStatus @default(PENDING)
-  fulfilledBookTitle  String?
-  fulfilledBookAuthor String?
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-}
-
-
 enum RequestStatus {
   PENDING
   FULFILLED
   REJECTED
+}
+
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  password        String
+  name            String
+  role            Role           @default(USER)
+  books           Book[]         @relation("UserBooks")
+  bookRequests    BookRequest[]
+  booksAdded      Book[]         @relation("Book_addedBy")
+  bookProgresses  BookProgress[]
+  createdAt       DateTime       @default(now())
+}
+
+model Book {
+  id              String         @id @default(uuid())
+  title           String
+  author          String
+  epubPath        String
+  folderName      String
+  users           User[]         @relation("UserBooks")
+  addedBy         User           @relation("Book_addedBy", fields: [addedById], references: [id])
+  addedById       String
+  bookProgresses  BookProgress[]
+  createdAt       DateTime       @default(now())
+}
+
+model BookProgress {
+  id        String   @id @default(uuid())
+
+  /// relations
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+
+  book      Book     @relation(fields: [bookId], references: [id])
+  bookId    String
+
+  /// suivi de lecture
+  loc       Int      // index de book.locations
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, bookId])
+}
+
+model BookRequest {
+  id                  String         @id @default(uuid())
+  title               String
+  author              String?
+  user                User           @relation(fields: [userId], references: [id])
+  userId              String
+  status              RequestStatus  @default(PENDING)
+  fulfilledBookTitle  String?
+  fulfilledBookAuthor String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 }

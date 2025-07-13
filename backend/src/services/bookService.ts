@@ -1,13 +1,19 @@
-import { FastifyInstance } from 'fastify'
+import { FastifyInstance, FastifyRequest } from 'fastify'
 
-export async function getBookById(fastify: FastifyInstance, id: string) {
+
+export async function getBookById(
+  fastify: FastifyInstance,
+  request: FastifyRequest,
+  id: string
+) {
   const book = await fastify.prisma.book.findUnique({
     where: { id },
   })
 
   if (!book) return null
 
-  const epubPath = `http://localhost:3000/uploads/epub/${book.folderName}/livre.epub`
+  const baseUrl = `${request.protocol}://${request.headers.host}`
+  const epubPath = `${baseUrl}/uploads/epub/${book.folderName}/livre.epub`
 
   return {
     ...book,

@@ -12,5 +12,12 @@ declare module 'fastify' {
 
   interface FastifyRequest {
     destroySession: (callback: (err?: Error) => void) => void
+
+     user?: {
+      id: string
+      email: string
+      name: string
+      role: 'USER' | 'ADMIN'
+    }
   }
 }
