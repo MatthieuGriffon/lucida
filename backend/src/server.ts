@@ -21,6 +21,7 @@ import { adminBookRequestRoutes } from '@/routes/adminBookRequest'
 import { adminBookRoutes } from '@/routes/adminBook'
 import { bookRoutes } from '@/routes/book'
 import { progressRoutes } from '@/routes/progressRoutes'
+import  userPreferenceRoutes from '@/routes/userPreference'
 import fastifyMultipart from '@fastify/multipart'
 
 
@@ -54,6 +55,9 @@ const start = async () => {
     }
   },
   credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Disposition'],
 })
 
     app.register(prismaPlugin)
@@ -72,7 +76,7 @@ const start = async () => {
     app.register(adminBookRoutes, { prefix: '/api' })
     app.register(bookRoutes, { prefix: '/api' })
     app.register(progressRoutes, { prefix: '/api' })
-
+    app.register(userPreferenceRoutes, { prefix: '/api/user' })
     app.get('/', async () => {
       return { message: 'Bienvenue sur Lucida 💫' }
     })

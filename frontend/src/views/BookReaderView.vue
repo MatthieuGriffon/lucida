@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, nextTick } from 'vue'
 import { useRoute, useRouter }                      from 'vue-router'
+import { watch } from 'vue'
+import FontSizeControl from '@/components/ui/FontSizeControl.vue'
+import { usePreferenceStore } from '@/stores/preferences'
+
 import ePub                                         from 'epubjs'
 
 import { ensureLocations }             from '@/utils/ensureLocations'
 import { saveProgress, fetchProgress } from '@/api/progress'
+
+// Import the preference store
+const preferenceStore = usePreferenceStore()
 
 /*’état*/
 const route       = useRoute()
@@ -86,6 +93,11 @@ async function initReader(currentBook: { id: string; epubPath: string }) {
   rendition.value = rend;
   console.log('[initReader] rendition créé');
 
+  // 4bis. Application de la taille de police
+await preferenceStore.fetchPreference()
+rend.themes.fontSize(preferenceStore.fontSize)
+console.log('[initReader] fontSize appliqué :', preferenceStore.fontSize)
+
   // 5. Attache le listener AVANT display et ignore le premier relocated
   let ignoreFirst = true;
   let lastLoc = stored ?? 0;
@@ -143,6 +155,12 @@ onMounted(async () => {
   console.log('[onMounted] initReader finished')
 })
 
+watch(() => preferenceStore.fontSize, (newSize) => {
+  if (rendition.value) {
+    console.log('[watch] nouvelle taille appliquée :', newSize)
+    rendition.value.themes.fontSize(newSize)
+  }
+})
 onBeforeUnmount(() => {
   console.log('[onBeforeUnmount] cleanup')
   window.removeEventListener('resize', updateReaderHeight)
@@ -156,13 +174,17 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="h-[98vh] bg-gray-900 text-white flex flex-col p-6 overflow-hidden">
-    <div ref="headerRef">
-      <RouterLink to="/user/books" class="inline-block mb-4 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg">
-        ← Retour à la bibliothèque
-      </RouterLink>
-      <h1 class="text-xl font-bold">{{ book?.title }}</h1>
-      <p class="text-gray-400">{{ book?.author || 'Auteur inconnu' }}</p>
-    </div>
+    <div ref="headerRef" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+  <div>
+    <RouterLink to="/user/books" class="inline-block bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg mb-2 sm:mb-0">
+      ← Retour à la bibliothèque
+    </RouterLink>
+    <h1 class="text-xl font-bold">{{ book?.title }}</h1>
+    <p class="text-gray-400">{{ book?.author || 'Auteur inconnu' }}</p>
+  </div>
+
+  <FontSizeControl />
+</div>
     <div id="reader-container" class="relative flex-grow">
       <div id="reader" class="bg-white text-black rounded h-full"></div>
       <div class="absolute left-0 top-0 h-full w-1/3 z-10" @click="prevPage"/>
