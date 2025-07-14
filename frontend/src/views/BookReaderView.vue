@@ -4,6 +4,7 @@ import { useRoute, useRouter }                      from 'vue-router'
 import { watch } from 'vue'
 import FontSizeControl from '@/components/ui/FontSizeControl.vue'
 import { usePreferenceStore } from '@/stores/preferences'
+import DarkModeToggle from '@/components/user/DarkModeToggle.vue'
 
 import ePub                                         from 'epubjs'
 
@@ -27,12 +28,11 @@ const readerHeight= ref(0)
 /*helpers*/
 function updateReaderHeight() {
   const header = headerRef.value?.offsetHeight ?? 0
-  readerHeight.value = Math.max(window.innerHeight - header - 48, 200)
-  console.log('[updateReaderHeight] readerHeight =', readerHeight.value)
+  const safetyMargin = 32
+  readerHeight.value = window.innerHeight - header - safetyMargin
 }
 
 async function fetchBook(id: string) {
-  console.log('[fetchBook] start for', id)
   loading.value = true; error.value = ''
   try {
     const base = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '')
@@ -40,42 +40,29 @@ async function fetchBook(id: string) {
     const res = await fetch(`${base}/api/books/${id}`, { credentials:'include' })
     if (!res.ok) throw new Error((await res.json()).message)
     book.value = await res.json()
-    console.log('[fetchBook] loaded book =', book.value)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Erreur inconnue'
     console.error('[fetchBook] error', e)
   } finally {
     loading.value = false
-    console.log('[fetchBook] done, loading=', loading.value)
   }
 }
 
 async function safeDisplay(r: ePub.Rendition, cfi?: string) {
-  console.log('[safeDisplay] début, CFI =', cfi)
   try {
     cfi ? await r.display(cfi) : await r.display()
-    console.log('[safeDisplay] affichage OK')
   } catch (err) {
-    console.warn('[safeDisplay] fallback display', err)
     await r.display()
   }
 }
 
-/*initReader corrigé*/
 async function initReader(currentBook: { id: string; epubPath: string }) {
-  console.log('[initReader] start for', currentBook.id);
-
-  // 1. Instanciation du livre et génération des emplacements
   const bookEpub = ePub(currentBook.epubPath);
   await ensureLocations(bookEpub);
-  console.log('[initReader] locations count =', bookEpub.locations.length());
 
-  // 2. Récupération de la progression stockée
   const stored = await fetchProgress(currentBook.id);
-  console.log('[initReader] stored loc =', stored);
-
-  // 3. Calcul du CFI de départ
   let startCfi: string | undefined;
+
   if (
     stored != null &&
     stored >= 0 &&
@@ -83,62 +70,76 @@ async function initReader(currentBook: { id: string; epubPath: string }) {
   ) {
     startCfi = bookEpub.locations.cfiFromLocation(stored);
   }
-  console.log('[initReader] startCfi =', startCfi);
 
-  // 4. Création du rendu et exposition pour navigation
   const rend = bookEpub.renderTo('reader', {
     width: '100%',
     height: readerHeight.value,
   });
-  rendition.value = rend;
-  console.log('[initReader] rendition créé');
 
-  // 4bis. Application de la taille de police
-await preferenceStore.fetchPreference()
-rend.themes.fontSize(preferenceStore.fontSize)
-console.log('[initReader] fontSize appliqué :', preferenceStore.fontSize)
-// 💡 Appliquer le thème dark ou light
-rend.themes.register('lucida-theme', {
-  body: {
-    background: preferenceStore.darkMode ? '#111827' : '#ffffff', // Tailwind gray-900 ou white
-    color: preferenceStore.darkMode ? '#f9fafb' : '#111827',       // Tailwind gray-50 ou gray-900
-    lineHeight: '1.6',
+  rendition.value = rend;
+
+  // 💡 Charger les préférences
+  await preferenceStore.fetchPreference();
+
+  // 💡 Appliquer la taille de police
+rend.themes.fontSize(preferenceStore.fontSize);
+rend.themes.font("Atkinson Hyperlegible, sans-serif");
+// 💡 Appliquer le thème complet : couleurs + font
+rend.themes.register('lucida-theme', `
+  html, body {
+    background: ${preferenceStore.darkMode ? '#111827' : '#ffffff'};
+    color: ${preferenceStore.darkMode ? '#f9fafb' : '#111827'};
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
   }
-})
-rend.themes.select('lucida-theme')
-console.log('[initReader] thème appliqué :', preferenceStore.darkMode ? 'sombre' : 'clair')
-  // 5. Attache le listener AVANT display et ignore le premier relocated
+  body {
+    padding-bottom: 6rem;
+    margin-bottom: 12rem;
+  }
+  p {
+    margin-bottom: 2em;
+  }
+`);
+rend.themes.select('lucida-theme');
+
+// 💡 Sécurisation : injecter <link> vers la font dans chaque iframe EPUB
+rend.on('content.documentLoaded', (doc: Document) => {
+  const head = doc.querySelector('head');
+  if (head && !head.querySelector('link[href="/fonts/lucida-font.css"]')) {
+    const link = doc.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/fonts/lucida-font.css';
+    head.appendChild(link);
+  }
+});
+
+  // 💡 Suivi de la progression de lecture
   let ignoreFirst = true;
   let lastLoc = stored ?? 0;
 
   rend.on('relocated', (loc: { start: { location: number } }) => {
     if (ignoreFirst) {
-      console.log('[relocated] (initial ignoré)');
       ignoreFirst = false;
       return;
     }
 
     const idx = loc.start.location ?? -1;
     const max = bookEpub.locations.length() - 1;
-    console.log('[relocated] idx =', idx, '/', max);
 
     if (idx >= 0 && idx <= max && idx !== lastLoc) {
       lastLoc = idx;
-      console.log('[relocated] saveProgress(', idx, ')');
       saveProgress(currentBook.id, idx)
         .then(() => console.log('[progress] saved'))
         .catch(console.error);
     }
   });
-  console.log('[initReader] listener “relocated” attaché (avec ignoreFirst)');
 
-  // 6. Affichage initial
+  // 💡 Affichage initial
   await safeDisplay(rend, startCfi);
-  console.log('[initReader] affichage initial fait');
 
-  // 7. On est prêt à naviguer
+  // 💡 On est prêt
   isReady.value = true;
-  console.log('[initReader] terminé, isReady =', isReady.value);
 }
 
 /*navigation*/
@@ -147,13 +148,11 @@ const prevPage = () => { console.log('[nav] prevPage'); rendition.value?.prev() 
 
 /*lifecycle*/
 onMounted(async () => {
-  console.log('[onMounted] start')
   await nextTick()
   updateReaderHeight()
   window.addEventListener('resize', updateReaderHeight)
 
   const id = route.params.id as string
-  console.log('[onMounted] bookId =', id)
   if (!id) return router.push({ name:'user-books' })
 
   await fetchBook(id)
@@ -161,61 +160,75 @@ onMounted(async () => {
 
   await nextTick()
   await initReader(book.value)
-  console.log('[onMounted] initReader finished')
 })
 
 watch(() => preferenceStore.fontSize, (newSize) => {
   if (rendition.value) {
-    console.log('[watch] nouvelle taille appliquée :', newSize)
     rendition.value.themes.fontSize(newSize)
   }
 })
 watch(() => preferenceStore.darkMode, (isDark) => {
-  rendition.value?.themes.register('lucida-theme', {
-    body: {
-      background: isDark ? '#111827' : '#ffffff',
-      color: isDark ? '#f9fafb' : '#111827',
-      lineHeight: '1.6',
-    }
-  })
-  rendition.value?.themes.select('lucida-theme')
-  console.log('[watch] thème mis à jour :', isDark ? 'sombre' : 'clair')
+ rendition.value?.themes.register('lucida-theme', `
+   body {
+    background: ${isDark ? '#111827' : '#ffffff'};
+    color: ${isDark ? '#f9fafb' : '#111827'};
+    line-height: 1.6;
+    padding-bottom: 12rem;
+  }
+`)
+rendition.value?.themes.select('lucida-theme')
 })
 onBeforeUnmount(() => {
-  console.log('[onBeforeUnmount] cleanup')
   window.removeEventListener('resize', updateReaderHeight)
   if (rendition.value?.destroy) {
     rendition.value.destroy()
     rendition.value = undefined
-    console.log('[onBeforeUnmount] rendition détruit')
   }
 })
 </script>
-
 <template>
-  <div class="h-[98vh] bg-gray-900 text-white flex flex-col p-6 overflow-hidden">
-    <div ref="headerRef" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-  <div>
-    <RouterLink to="/user/books" class="inline-block bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg mb-2 sm:mb-0">
-      ← Retour à la bibliothèque
-    </RouterLink>
-    <h1 class="text-xl font-bold">{{ book?.title }}</h1>
+  <div class="h-screen bg-gray-900 text-white flex flex-col overflow-hidden ">
+    <div ref="headerRef" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-2">
+  <div class="flex items-center gap-2 flex-wrap">
+    <button
+      @click="router.push({ name: 'user-books' })"
+      aria-label="Retour à la bibliothèque"
+      class="text-white hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-white rounded p-1"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <p class="text-lg font-bold">{{ book?.title }}</p>
     <p class="text-gray-400">{{ book?.author || 'Auteur inconnu' }}</p>
   </div>
 
-  <FontSizeControl />
+  <div class="flex items-center gap-2 mt-2 sm:mt-0">
+    <FontSizeControl />
+    <DarkModeToggle />
+  </div>
 </div>
-    <div id="reader-container" class="relative flex-grow">
-      <div id="reader" class="bg-white text-black rounded h-full"></div>
-      <div class="absolute left-0 top-0 h-full w-1/3 z-10" @click="prevPage"/>
-      <div class="absolute right-0 top-0 h-full w-1/3 z-10" @click="nextPage"/>
+
+    <div id="reader-container" class="relative flex-grow overflow-hidden mb-[30px] " > 
+      <div id="reader" class="bg-white text-black w-full h-full rounded overflow-hidden "  />
+      <div class="absolute left-0 top-0 h-full w-1/3 z-10" @click="prevPage" />
+      <div class="absolute right-0 top-0 h-full w-1/3 z-10" @click="nextPage" />
     </div>
   </div>
 </template>
 
 <style scoped>
-#reader-container { height:100% }
-#reader            { width:100%; height:100%; overflow:hidden }
-#reader iframe     { width:100%!important; height:100%!important; border:none }
-html, body        { overflow:hidden }
+#reader iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none;
+  
+}
+.epubjs-container {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: auto !important; 
+}
 </style>

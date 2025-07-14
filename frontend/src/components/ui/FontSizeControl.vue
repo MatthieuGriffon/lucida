@@ -25,10 +25,9 @@ function resetFont() {
 </script>
 
 <template>
-  <div class="flex items-center space-x-2 bg-gray-800 text-white p-2 rounded-lg shadow-lg">
-    <button @click="decreaseFont" class="text-xl px-3 py-1 bg-gray-700 rounded hover:bg-gray-600">A–</button>
-    <span class="text-sm">{{ store.fontSize }}</span>
-    <button @click="increaseFont" class="text-xl px-3 py-1 bg-gray-700 rounded hover:bg-gray-600">A+</button>
-    <button @click="resetFont" class="text-sm px-2 py-1 ml-2 bg-gray-600 rounded hover:bg-gray-500">Réinit.</button>
+  <div class="flex items-center space-x-2 bg-gray-800 text-white p-1 rounded-lg shadow-lg">
+    <button @click="decreaseFont" class="text-xs px-1 py-0 bg-gray-700 rounded hover:bg-gray-600">A–</button>
+    <span class="text-xs">{{ store.fontSize }}</span>
+    <button @click="increaseFont" class="text-xs px-1 py-0 bg-gray-700 rounded hover:bg-gray-600">A+</button>
   </div>
 </template>

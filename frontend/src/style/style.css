@@ -12,9 +12,11 @@
 
 html,
 body {
+  min-height: 100% !important;
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  height: 100%;    /* texte blanc de base */
+  height: 100%;
 }
 
 /* ===== ACCESSIBILITÉ TACTILE ===== */
@@ -48,6 +50,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  overflow: hidden;
   touch-action: manipulation;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

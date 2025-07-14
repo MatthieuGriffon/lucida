@@ -9,6 +9,7 @@ const userStore = useUserStore()
 const preferenceStore = usePreferenceStore()
 const currentTime = ref('')
 const route = useRoute()
+const hideHeader = ref(false)
 
 function updateTime() {
   const now = new Date()
@@ -29,11 +30,19 @@ onMounted(async () => {
 watch(() => preferenceStore.darkMode, (isDark) => {
   document.documentElement.classList.toggle('dark', isDark)
 })
+watch(
+  () => route.fullPath,
+  (path) => {
+    hideHeader.value = path.startsWith('/user/read/')
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
   <div class="min-h-screen font-sans bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-   <header
+  <header
+  v-if="!hideHeader"
   class="bg-white dark:bg-gray-800 shadow px-2 py-2 flex justify-between items-center"
 >
   <div>
