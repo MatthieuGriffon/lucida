@@ -97,7 +97,16 @@ async function initReader(currentBook: { id: string; epubPath: string }) {
 await preferenceStore.fetchPreference()
 rend.themes.fontSize(preferenceStore.fontSize)
 console.log('[initReader] fontSize appliqué :', preferenceStore.fontSize)
-
+// 💡 Appliquer le thème dark ou light
+rend.themes.register('lucida-theme', {
+  body: {
+    background: preferenceStore.darkMode ? '#111827' : '#ffffff', // Tailwind gray-900 ou white
+    color: preferenceStore.darkMode ? '#f9fafb' : '#111827',       // Tailwind gray-50 ou gray-900
+    lineHeight: '1.6',
+  }
+})
+rend.themes.select('lucida-theme')
+console.log('[initReader] thème appliqué :', preferenceStore.darkMode ? 'sombre' : 'clair')
   // 5. Attache le listener AVANT display et ignore le premier relocated
   let ignoreFirst = true;
   let lastLoc = stored ?? 0;
@@ -160,6 +169,17 @@ watch(() => preferenceStore.fontSize, (newSize) => {
     console.log('[watch] nouvelle taille appliquée :', newSize)
     rendition.value.themes.fontSize(newSize)
   }
+})
+watch(() => preferenceStore.darkMode, (isDark) => {
+  rendition.value?.themes.register('lucida-theme', {
+    body: {
+      background: isDark ? '#111827' : '#ffffff',
+      color: isDark ? '#f9fafb' : '#111827',
+      lineHeight: '1.6',
+    }
+  })
+  rendition.value?.themes.select('lucida-theme')
+  console.log('[watch] thème mis à jour :', isDark ? 'sombre' : 'clair')
 })
 onBeforeUnmount(() => {
   console.log('[onBeforeUnmount] cleanup')

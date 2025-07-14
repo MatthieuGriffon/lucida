@@ -84,6 +84,7 @@ model UserPreference {
   userId    String   @unique
 
   fontSize  String   @default("125%")
+  darkMode  Boolean  @default(false) 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

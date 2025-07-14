@@ -1,15 +1,18 @@
 export const UserPreferenceResponseSchema = {
   type: 'object',
   properties: {
-    fontSize: { type: 'string', pattern: '^\\d+%$' }, 
+    fontSize: { type: 'string', pattern: '^\\d+%$' },
+    darkMode: { type: 'boolean' },
   },
-  required: ['fontSize'],
+  required: ['fontSize', 'darkMode'],
 }
 
 export const UpdateUserPreferenceBodySchema = {
   type: 'object',
   properties: {
     fontSize: { type: 'string', pattern: '^\\d+%$', minLength: 2, maxLength: 5 },
+    darkMode: { type: 'boolean' },
   },
-  required: ['fontSize'],
+  additionalProperties: false,
+  required: [],
 }

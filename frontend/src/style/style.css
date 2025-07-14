@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@custom-variant dark (&:where(.dark, .dark *));
 /* ===== RESET MINIMAL ===== */
 *,
 *::before,
@@ -14,9 +14,7 @@ html,
 body {
   margin: 0;
   padding: 0;
-  height: 100%;
-  background-color: #000; /* fond sombre de base */
-  color: #fff;            /* texte blanc de base */
+  height: 100%;    /* texte blanc de base */
 }
 
 /* ===== ACCESSIBILITÉ TACTILE ===== */
