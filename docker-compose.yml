@@ -1,0 +1,37 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: https://lucida-app.fr
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - lucida-network
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "3000:3000"
+    networks:
+      - lucida-network
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: lucida
+      POSTGRES_PASSWORD: lucida_pass
+      POSTGRES_DB: lucida_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - lucida-network
+
+networks:
+  lucida-network:
+
+volumes:
+  pgdata:

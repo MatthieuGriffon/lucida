@@ -59,15 +59,13 @@ export async function deleteUser(fastify: FastifyInstance, userId: string) {
     return { success: false, message: 'Impossible de supprimer un compte administrateur' }
   }
 
-  // Supprimer les demandes de livres liées
-  await fastify.prisma.bookRequest.deleteMany({
-    where: { userId }
-  })
+  // 🧹 Supprimer les données liées
+  await fastify.prisma.bookRequest.deleteMany({ where: { userId } })
+  await fastify.prisma.bookProgress.deleteMany({ where: { userId } })
+  await fastify.prisma.userPreference.deleteMany({ where: { userId } })
 
-  // Supprimer le compte utilisateur
-  await fastify.prisma.user.delete({
-    where: { id: userId }
-  })
+  // 💥 Supprimer le compte
+  await fastify.prisma.user.delete({ where: { id: userId } })
 
   return { success: true }
 }

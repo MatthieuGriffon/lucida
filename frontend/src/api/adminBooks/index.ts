@@ -1,5 +1,7 @@
+import { BASE_API_URL } from '@/api/config'
+
 export async function uploadBookFile(formData: FormData): Promise<{ epubPath: string }> {
-  const response = await fetch('/api/admin/book/upload', {
+  const response = await fetch(`${BASE_API_URL}/api/admin/book/upload`, {
     method: 'POST',
     body: formData,
     credentials: 'include',
@@ -26,7 +28,7 @@ export async function uploadBookFile(formData: FormData): Promise<{ epubPath: st
 }
 
 export async function createBook(data: { title: string; author?: string; epubPath: string }) {
-  const response = await fetch('/api/admin/book', {
+  const response = await fetch(`${BASE_API_URL}/api/admin/book`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -39,12 +41,12 @@ export async function createBook(data: { title: string; author?: string; epubPat
   }
 
   return await response.json()
-} 
+}
 
 export async function getAllBooks(): Promise<
   { id: string; title: string; author?: string; epubPath: string; createdAt: string }[]
 > {
-  const response = await fetch('/api/admin/books', {
+  const response = await fetch(`${BASE_API_URL}/api/admin/books`, {
     method: 'GET',
     credentials: 'include',
   })
@@ -58,7 +60,7 @@ export async function getAllBooks(): Promise<
 }
 
 export async function deleteBook(id: string): Promise<void> {
-  const response = await fetch(`/api/admin/book/${id}`, {
+  const response = await fetch(`${BASE_API_URL}/api/admin/book/${id}`, {
     method: 'DELETE',
     credentials: 'include',
   })

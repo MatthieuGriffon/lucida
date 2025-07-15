@@ -5,6 +5,7 @@ import { watch } from 'vue'
 import FontSizeControl from '@/components/ui/FontSizeControl.vue'
 import { usePreferenceStore } from '@/stores/preferences'
 import DarkModeToggle from '@/components/user/DarkModeToggle.vue'
+import { BASE_API_URL } from '@/api/config'
 
 import ePub                                         from 'epubjs'
 
@@ -33,12 +34,19 @@ function updateReaderHeight() {
 }
 
 async function fetchBook(id: string) {
-  loading.value = true; error.value = ''
+  loading.value = true
+  error.value = ''
+
   try {
-    const base = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '')
-               ?? `${location.protocol}//${location.hostname}:3000`
-    const res = await fetch(`${base}/api/books/${id}`, { credentials:'include' })
-    if (!res.ok) throw new Error((await res.json()).message)
+    const res = await fetch(`${BASE_API_URL}/api/books/${id}`, {
+      credentials: 'include',
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => null)
+      throw new Error(err?.message || 'Erreur lors du chargement du livre')
+    }
+
     book.value = await res.json()
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Erreur inconnue'

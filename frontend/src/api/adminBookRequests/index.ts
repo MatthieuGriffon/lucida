@@ -1,9 +1,8 @@
 import type { BookRequestWithUser } from '@/types/bookRequest'
-
-const BASE = '/api/admin/book-requests'
+import { BASE_API_URL } from '@/api/config'
 
 export async function getBookRequests(): Promise<BookRequestWithUser[]> {
-  const res = await fetch(BASE, {
+  const res = await fetch(`${BASE_API_URL}/api/admin/book-requests`, {
     credentials: 'include',
   })
 
@@ -18,7 +17,7 @@ export async function fulfillRequest(id: string, data: {
   fulfilledTitle: string
   fulfilledAuthor?: string
 }) {
-  const res = await fetch(`${BASE}/${id}/fulfill`, {
+  const res = await fetch(`${BASE_API_URL}/api/admin/book-requests/${id}/fulfill`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -34,7 +33,7 @@ export async function fulfillRequest(id: string, data: {
 }
 
 export async function rejectRequest(id: string) {
-  const res = await fetch(`${BASE}/${id}/reject`, {
+  const res = await fetch(`${BASE_API_URL}/api/admin/book-requests/${id}/reject`, {
     method: 'POST',
     credentials: 'include',
   })

@@ -1,5 +1,7 @@
+import { BASE_API_URL } from '@/api/config'
+
 export async function changePassword(oldPassword: string, newPassword: string) {
-  const res = await fetch('/api/account/change-password', {
+  const res = await fetch(`${BASE_API_URL}/api/account/change-password`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -15,9 +17,9 @@ export async function changePassword(oldPassword: string, newPassword: string) {
 
   return await res.json()
 }
-// Déconnecte l'utilisateur
+
 export async function logout() {
-  const res = await fetch('/api/auth/logout', {
+  const res = await fetch(`${BASE_API_URL}/api/auth/logout`, {
     method: 'POST',
     credentials: 'include',
   })
@@ -29,9 +31,8 @@ export async function logout() {
   return await res.json()
 }
 
-// Supprime le compte de l'utilisateur
 export async function deleteAccount(password: string) {
-  const res = await fetch('/api/account/delete', {
+  const res = await fetch(`${BASE_API_URL}/api/account/delete`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',

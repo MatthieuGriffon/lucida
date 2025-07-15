@@ -1,7 +1,9 @@
+import { BASE_API_URL } from '@/api/config'
+
 export async function getUserBooks(): Promise<
   { id: string; title: string; author?: string; epubPath: string; createdAt: string }[]
 > {
-  const response = await fetch('/api/books', {
+  const response = await fetch(`${BASE_API_URL}/api/books`, {
     method: 'GET',
     credentials: 'include',
   })

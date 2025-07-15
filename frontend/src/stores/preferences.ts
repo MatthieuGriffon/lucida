@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-const base = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? `${location.protocol}//${location.hostname}:3000`
+import { BASE_API_URL } from '@/api/config'
 
 export const usePreferenceStore = defineStore('preference', () => {
   const fontSize = ref<string>('125%')
@@ -13,7 +13,7 @@ export const usePreferenceStore = defineStore('preference', () => {
     error.value = null
 
     try {
-      const res = await fetch(`${base}/api/user/preference`, {
+      const res = await fetch(`${BASE_API_URL}/api/user/preference`, {
         credentials: 'include',
       })
       if (!res.ok) throw new Error('Erreur de chargement des préférences')
@@ -22,7 +22,6 @@ export const usePreferenceStore = defineStore('preference', () => {
       fontSize.value = data.fontSize
       darkMode.value = data.darkMode
     } catch (err: any) {
-      console.error('⚠️ fetchPreference error', err)
       error.value = err?.message || 'Erreur réseau'
     } finally {
       loading.value = false
@@ -31,8 +30,8 @@ export const usePreferenceStore = defineStore('preference', () => {
 
   async function updateFontSize(newSize: string) {
     try {
-      fontSize.value = newSize // mise à jour immédiate pour réactivité
-      const res = await fetch(`${base}/api/user/preference`, {
+      fontSize.value = newSize
+      const res = await fetch(`${BASE_API_URL}/api/user/preference`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -45,13 +44,15 @@ export const usePreferenceStore = defineStore('preference', () => {
       error.value = err?.message || 'Erreur réseau'
     }
   }
-   async function toggleDarkMode() {
+
+  async function toggleDarkMode() {
     darkMode.value = !darkMode.value
     await savePreferences()
   }
+
   async function savePreferences() {
     try {
-      const res = await fetch(`${base}/api/user/preference`, {
+      const res = await fetch(`${BASE_API_URL}/api/user/preference`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -64,15 +65,15 @@ export const usePreferenceStore = defineStore('preference', () => {
       error.value = err?.message || 'Erreur réseau'
     }
   }
-  return {
-  fontSize,
-  darkMode,
-  loading,
-  error,
-  fetchPreference,
-  updateFontSize,
-  toggleDarkMode, 
-  savePreferences, 
-}
 
+  return {
+    fontSize,
+    darkMode,
+    loading,
+    error,
+    fetchPreference,
+    updateFontSize,
+    toggleDarkMode,
+    savePreferences,
+  }
 })

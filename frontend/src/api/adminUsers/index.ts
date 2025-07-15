@@ -1,5 +1,7 @@
+import { BASE_API_URL } from '@/api/config'
+
 export async function fetchUsers() {
-  const res = await fetch('/api/admin/users', { credentials: 'include' })
+  const res = await fetch(`${BASE_API_URL}/api/admin/users`, { credentials: 'include' })
   if (!res.ok) throw new Error('Erreur chargement utilisateurs')
   return await res.json()
 }
@@ -10,7 +12,7 @@ export async function createUser(user: {
   password: string
   role: 'USER' | 'ADMIN'
 }) {
-  const res = await fetch('/api/admin/users', {
+  const res = await fetch(`${BASE_API_URL}/api/admin/users`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -22,7 +24,7 @@ export async function createUser(user: {
 }
 
 export async function changeUserPassword(id: string, password: string) {
-  const res = await fetch(`/api/admin/users/${id}/password`, {
+  const res = await fetch(`${BASE_API_URL}/api/admin/users/${id}/password`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -34,7 +36,7 @@ export async function changeUserPassword(id: string, password: string) {
 }
 
 export async function deleteUser(id: string) {
-  const res = await fetch(`/api/admin/users/${id}`, {
+  const res = await fetch(`${BASE_API_URL}/api/admin/users/${id}`, {
     method: 'DELETE',
     credentials: 'include',
   })

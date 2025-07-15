@@ -1,9 +1,10 @@
+import { BASE_API_URL } from '@/api/config'
+
 export type BookRequestPayload = {
   title: string
   author?: string
 }
 
-// Type d'une demande retournée depuis l'API
 export type BookRequest = {
   id: string
   title: string
@@ -15,12 +16,11 @@ export type BookRequest = {
   updatedAt: string
 }
 
-// POST : soumettre une demande
 export async function submitBookRequest(
   payload: BookRequestPayload
 ): Promise<{ success: boolean; message?: string }> {
   try {
-    const response = await fetch('/api/book-request', {
+    const response = await fetch(`${BASE_API_URL}/api/book-request`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -38,10 +38,9 @@ export async function submitBookRequest(
   }
 }
 
-// GET : récupérer les demandes de l'utilisateur connecté
 export async function getUserBookRequests(): Promise<BookRequest[]> {
   try {
-    const response = await fetch('/api/book-request', {
+    const response = await fetch(`${BASE_API_URL}/api/book-request`, {
       method: 'GET',
       credentials: 'include',
     })
@@ -50,17 +49,15 @@ export async function getUserBookRequests(): Promise<BookRequest[]> {
       throw new Error('Erreur lors du chargement des demandes')
     }
 
-    const data = await response.json()
-    return data as BookRequest[]
+    return await response.json()
   } catch (err) {
     console.error(err)
     return []
   }
 }
 
-// DELETE : supprimer une demande
 export async function deleteBookRequest(id: string): Promise<void> {
-  const res = await fetch(`/api/book-request/${id}`, {
+  const res = await fetch(`${BASE_API_URL}/api/book-request/${id}`, {
     method: 'DELETE',
     credentials: 'include',
   })
